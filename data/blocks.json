@@ -1,0 +1,81 @@
+{
+    "blocks": [
+        {
+            "name": "smallsquare",
+            "color": "#e49525",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [1, 1]
+            ]
+        },
+        {
+            "name": "smallarm1",
+            "color": "#25e475",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [2, 0],
+                [0, 1]
+            ]
+        },
+        {
+            "name": "smallarm2",
+            "color": "#e425ce",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [0, 2]
+            ]
+        },
+        {
+            "name": "tee",
+            "color": "#25e1e4",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [2, 0],
+                [1, 1]
+            ]
+        },
+        {
+            "name": "smallrod",
+            "color": "#e42b25",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [2, 0],
+                [3, 0]
+            ]
+        },
+        {
+            "name": "snake1",
+            "color": "#98e425",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [2, 1]
+            ]
+        },
+        {
+            "name": "snake2",
+            "color": "#7225e4",
+            "frequency_scale": 1,
+            "coordinates": [
+                [0, 0],
+                [0, 1],
+                [1, 1],
+                [1, 2]
+            ]
+        }
+    ]
+}
