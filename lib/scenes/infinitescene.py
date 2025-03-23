@@ -6,7 +6,7 @@ from pygame import gfxdraw
 import numpy as np
 import itertools
 
-from .pygameconfig import *
+from .infiniteconfig import *
 from ..blockblast.board import BBBoard
 from ..blockblast.infinitegame import BBInfiniteGame
 from ..utils.npplus import *

@@ -1,4 +1,4 @@
-from lib.pygame.infinitepygame import BBInfinitePygame
+from lib.scenes.infinitescene import BBInfinitePygame
 
 
 if __name__ == '__main__':
