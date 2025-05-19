@@ -1,21 +1,23 @@
 import numpy as np
 
-from ..blockblast.board import BBBoard
-from ..blockblast.infinitegame import BBInfiniteGame
-from ..utils.pygameplus import *
+from lib.blockblast.board import BBBoard
+from lib.blockblast.infinitegame import BBInfiniteGame
+from lib.utils.pygameplus import *
+
+from lib.scenes.sceneconfig import *
 
 
-# Dimnsions
+# Dimensions
 
-
-WINDOW_RATIO = [9, 16]
-WINDOW_HEIGHT = 720
 
 SCORE_Y_RATIO = 0.12 # As a portion of the window height
 FONT_SCORE_SIZE_RATIO = 0.1 # As a portion of the window height
 
 BOARD_CENTER_Y_RATIO = 0.42 # As a portion of the window height
 BOARD_CELL_WIDTH_RATIO = 0.085 # As a portion of the window width
+BOARD_CELL_FILL_WIDTH_RATIO = 0.85 # As a portion of the board cell width
+BOARD_CELL_INNER_FILL_WIDTH_RATIO = 0.85 # As a portion of the board cell fill width
+BOARD_MARKER_CELL_WIDTH_RATIO = 1 # As a portion of the board cell width
 PREVIEW_CELL_WIDTH_RATIO = 0.05 # As a portion of the window width
 CELL_MARGIN_RATIO = 0.2 # As a portion of the cell width
 
@@ -23,16 +25,16 @@ WAVE_Y_RATIO = 0.75 # As a portion of the window height
 HOLD_Y_RATIO = 0.9 # As a portion of the window height
 PREVIEW_SPACING_RATIO = 0.275 # As a portion of the window width
 PREVIEW_HOVER_RADIUS_RATIO = 2.25 # As a portion of the preview cell width
-WAVE_ROW_HEIGHT_RATIO = 5 # As a portion of the preview cell width
-HOLD_MARK_RADIUS_RATIO = 1 # As a portion of the preview cell width
+WAVE_ROW_HEIGHT_RATIO = 6 # As a portion of the preview cell width
+HOLD_MARK_RADIUS_RATIO = 0.5 # As a portion of the preview cell width
 
-WINDOW_WIDTH = int(round(WINDOW_HEIGHT / WINDOW_RATIO[1] * WINDOW_RATIO[0]))
-WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
-WINDOW_CENTER_X = int(round(WINDOW_WIDTH / 2))
-WINDOW_CENTER_Y = int(round(WINDOW_HEIGHT / 2))
-WINDOW_CENTER = (WINDOW_CENTER_X, WINDOW_CENTER_Y)
+TIMER_RING_THICKNESS_RATIO = 0.11 # As a portion of the board cell width
+TIMER_RING_MARGIN_RATIO = 0.3 # As a portion of the board cell width
 
 BOARD_CELL_WIDTH = int(WINDOW_WIDTH * BOARD_CELL_WIDTH_RATIO)
+BOARD_CELL_FILL_WIDTH = int(BOARD_CELL_WIDTH * BOARD_CELL_FILL_WIDTH_RATIO)
+BOARD_MARKER_CELL_WIDTH = int(BOARD_CELL_WIDTH * BOARD_MARKER_CELL_WIDTH_RATIO)
+BOARD_CELL_BORDER = int(BOARD_CELL_WIDTH / 17)
 BOARD_CELL_MARGIN = int(BOARD_CELL_WIDTH * CELL_MARGIN_RATIO)
 
 BOARD_CENTER_Y = int(WINDOW_HEIGHT * BOARD_CENTER_Y_RATIO)
@@ -50,50 +52,43 @@ PREVIEW_HOVER_RADIUS = int(PREVIEW_CELL_WIDTH * PREVIEW_HOVER_RADIUS_RATIO)
 WAVE_ROW_HEIGHT = int(PREVIEW_CELL_WIDTH * WAVE_ROW_HEIGHT_RATIO)
 HOLD_MARK_RADIUS = int(PREVIEW_CELL_WIDTH * HOLD_MARK_RADIUS_RATIO)
 
+TIMER_RING_THICKNESS = int(BOARD_CELL_WIDTH * TIMER_RING_THICKNESS_RATIO)
+TIMER_RING_MARGIN = int(BOARD_CELL_WIDTH * TIMER_RING_MARGIN_RATIO)
+TIMER_SIZE = BBBoard.BOARD_SIZE * BOARD_CELL_WIDTH + (BBBoard.BOARD_SIZE - 1) * BOARD_CELL_MARGIN + 2 * (TIMER_RING_MARGIN + TIMER_RING_THICKNESS)
+
 SCORE_Y = int(WINDOW_HEIGHT * SCORE_Y_RATIO)
 FONT_SCORE_SIZE = int(WINDOW_HEIGHT * FONT_SCORE_SIZE_RATIO)
+
+
+# Animations
+
+
+FLASH_ALPHA_LERP = 0.1
+BOARD_CELL_SIZE_LERP = 0.3
+PREVIEW_CELL_SIZE_LERP = 0.3
+PREVIEW_CELL_POSITION_LERP = 0.5
+TIMER_LERP = 0.1
 
 
 # Colors
 
 
-COLOR_BG = (50, 20, 200)
-COLOR_BG_FLASH = color_lighten(COLOR_BG, 0.2)
+COLOR_BG_FLASH = color_lighten(COLOR_BASE, 0.5)
 COLOR_FLASH = (255, 255, 255)
-FLASH_INITIAL_ALPHA = 50
+FLASH_INITIAL_ALPHA = 35
 
-COLOR_CELL_BOARD = color_multiply(COLOR_BG, 0.6)
-COLOR_CELL_BOARD_HIGHLIGHT = color_lighten(COLOR_CELL_BOARD, 0.4)
-COLOR_CELL_BOARD_FILLED = (255, 255, 210)
-COLOR_CELL_PREVIEW = (100, 200, 255)
-COLOR_CELL_PREVIEW_HIGHLIGHT = color_lighten(COLOR_CELL_PREVIEW, 0.7)
-COLOR_BG_DARK = color_multiply(COLOR_BG, 0.8)
+COLOR_CELL_BOARD = (*COLOR_BASE, 15)
+COLOR_CELL_BOARD_BORDER = (*COLOR_BASE, 75)
+COLOR_CELL_BOARD_HIGHLIGHT = (*color_lighten(COLOR_BASE, 0.2), 100)
+COLOR_CELL_BOARD_FILLED = (*color_lighten(COLOR_BASE, 0.2), 200)
+COLOR_CELL_BOARD_INNER_FILLED = (*color_lighten(COLOR_BASE, 0.75), 225)
+COLOR_CELL_PREVIEW = (0, 5, 5, 240)
+COLOR_CELL_PREVIEW_BORDER = (100, 200, 255)
+COLOR_CELL_PREVIEW_HIGHLIGHT = color_lighten(COLOR_CELL_PREVIEW, 0.05)
+COLOR_CELL_PREVIEW_HIGHLIGHT_BORDER = color_lighten(COLOR_CELL_PREVIEW_BORDER, 0.7)
 
+COLOR_WAVE_ROW = (*COLOR_BASE, 15)
 COLOR_TEXT_SCORE = COLOR_CELL_BOARD_FILLED
-
-
-# Fonts
-
-
-pygame.font.init()
-
-FONT_SCORE = pygame.font.Font(asset_path(os.path.join('fonts', 'DAGGERSQUARE.otf')), FONT_SCORE_SIZE)
-
-
-# Sounds
-
-
-pygame.mixer.init()
-
-SOUND_SELECT = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'flick1.ogg')))
-
-SOUND_HOLD = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'crank1.wav')))
-
-SOUND_PLACE = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'snap1.wav')))
-
-SOUND_SCORE = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'ding3.wav')))
-SOUND_SCORE.set_volume(0.3)
-
-SOUND_LOSE = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'incorrect1.wav')))
-
-SOUND_RESTART = pygame.mixer.Sound(asset_path(os.path.join('sounds', 'wipe1.wav')))
+COLOR_TIMER = (*color_lighten(COLOR_BASE, 0.2), 100)
+COLOR_LERP_TIMER = (*color_lighten(COLOR_BASE, 0.2), 225)
+COLOR_HOLD_MARK = (*COLOR_BASE, 200)

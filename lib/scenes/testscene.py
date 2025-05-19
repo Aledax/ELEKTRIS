@@ -17,7 +17,7 @@ class TestScene(PygameScene):
         self.next_scene = None
 
 
-    def _update_frame(self, mouse_postiion, mouse_pressed, keys_pressed, events):
+    def _update_frame(self, dt, mouse_postiion, mouse_pressed, keys_pressed, events):
 
         for event in events:
             if event.type == KEYDOWN:

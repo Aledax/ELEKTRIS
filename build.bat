@@ -16,7 +16,7 @@ pyinstaller ^
     --hidden-import=blockblast ^
     --hidden-import=pygame ^
     --hidden-import=utils ^
-    --name BlockBust ^
-    mainpygame.py
+    --name ELEKTRIS ^
+    main.py
 
 deactivate

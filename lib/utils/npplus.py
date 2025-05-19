@@ -23,5 +23,10 @@ def vector_magnitude(vector):
 def distance(p1, p2):
     return vector_magnitude(np.subtract(p2, p1))
 
-def lerp(p1, p2, factor):
-    return np.add(p1, np.multiply(np.subtract(p2, p1), factor)).tolist()
+def lerp_float(f1, f2, factor, dt, snap_margin=0.1):
+    if abs(f1 - f2) <= snap_margin:
+        return f2
+    return f1 + (f2 - f1) * (1 - np.exp(dt * np.log(1 - factor)))
+
+def lerp_array(a1, a2, factor, dt):
+    return np.add(a1, np.multiply(np.subtract(a2, a1), (1 - np.exp(dt * np.log(1 - factor))))).tolist()

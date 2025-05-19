@@ -3,13 +3,20 @@ import pygame
 import math
 from pygame.locals import *
 
+
 from .npplus import *
+
+
+pygame.font.init()
+
 
 def asset_path(assets_path):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'assets', assets_path)
 
+
 def load_image(assets_path):
     return pygame.image.load(asset_path(assets_path)).convert_alpha()
+
 
 # blitPlus
 
@@ -48,6 +55,7 @@ def blit_plus(image: pygame.Surface, background: pygame.Surface, modes: tuple = 
 
     background.blit(image, (round(left - right), round(top - bottom)))
 
+
 def blit_plus_rotate(image: pygame.Surface, background: pygame.Surface, modes: tuple = (0, 0, 0, 0), values: tuple = (0, 0, 0, 0), rotation: float = 0):
 
     left, top, right, bottom = blit_plus_helper(image, background, modes, values)
@@ -58,6 +66,7 @@ def blit_plus_rotate(image: pygame.Surface, background: pygame.Surface, modes: t
     top -= (rotatedImage.get_height() - image.get_height()) / 2
 
     background.blit(rotatedImage, (round(left - right), round(top - bottom)))
+
 
 def blit_plus_helper(image: pygame.Surface, background: pygame.Surface, modes: tuple = (0, 0, 0, 0), values: tuple = (0, 0, 0, 0)):
     
@@ -81,13 +90,35 @@ def blit_plus_helper(image: pygame.Surface, background: pygame.Surface, modes: t
 
     return left, top, right, bottom
 
+
 def color_multiply(color, factor):
     return [int(component * factor) for component in color]
 
+
 def color_lighten(color, factor):
     return [int(component + (255 - component) * factor) for component in color]
+
 
 def draw_regular_polygon(surface, center, radius, sides, angle, color, width=0):
     angle_interval = np.pi * 2 / sides
     points = [np.add(center, vector_2d(angle_interval * i + angle, radius)).tolist() for i in range(sides)]
     pygame.draw.polygon(surface, color, points, width)
+
+
+def point_in_rect(point, rect):
+    if point[0] < rect[0] or point[0] > rect[0] + rect[2]: return False
+    if point[1] < rect[1] or point[1] > rect[1] + rect[3]: return False
+    return True
+
+
+def font_surface(font: pygame.font.Font, text, color):
+    return font.render(text, True, color)
+
+
+DEBUG_TEXT_COLOR = (255, 0, 0)
+DEBUG_TEXT_SIZE = 24
+DEBUG_TEXT_FONT = pygame.font.Font(None, DEBUG_TEXT_SIZE)
+
+
+def debug(surface, position, text):
+    surface.blit(font_surface(DEBUG_TEXT_FONT, text, DEBUG_TEXT_COLOR), position)

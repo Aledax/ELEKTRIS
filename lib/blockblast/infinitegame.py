@@ -11,6 +11,28 @@ class BBInfiniteGame:
     WAVE_SIZE = 3
     HOLD_SIZE = 1
 
+    MAX_LIFE = 20
+    PLACE_REPLENISH = 1
+    ROW_REPLENISH = 5
+
+    ABILITY_TAGS = [
+        'buff_i',
+        'buff_o',
+        'buff_t',
+        'buff_z',
+        'buff_l',
+        'buff_life_replenish',
+        'buff_score',
+        'insert_tile',
+        'delete_tile',
+        'skip_block',
+        'rotate_block_cw',
+        'rotate_block_ccw',
+        'flip_block',
+        'ghost_block',
+        'reshuffle'
+    ]
+
 
     class Block:
 
@@ -32,17 +54,19 @@ class BBInfiniteGame:
             return '\n'.join(' '.join(row) for row in rows)
 
     
-    def __init__(self, block_json_path):
+    def __init__(self, block_json_path, active_abilities):
 
         self.board = BBBoard()
+        self.started = False
         self.alive = True
         self.all_blocks = []
         self.wave_blocks = [None for _ in range(BBInfiniteGame.WAVE_SIZE)]
         self.hold_blocks = [None for _ in range(BBInfiniteGame.HOLD_SIZE)]
         self.score = 0
+        self.life = 0
+        self.abilities = {ability: ability in active_abilities for ability in BBInfiniteGame.ABILITY_TAGS}
 
         self._load_blocks(block_json_path)
-        self._generate_wave()
 
 
     def _load_blocks(self, block_json_path):
@@ -64,6 +88,11 @@ class BBInfiniteGame:
                         relative_position[1] -= min_y
                     rotated_block_data['coordinates'] = new_relative_positions
                     rotated_block_datas.append(rotated_block_data)
+
+            # Apply buffs
+            for rotated_block_data in rotated_block_datas:
+                if self.abilities[f'buff_{rotated_block_data['name']}']:
+                    rotated_block_data['frequency_scale'] *= 3
 
             frequency_sum = sum(block_data['frequency_scale'] for block_data in rotated_block_datas)
             for block_data in rotated_block_datas:
@@ -119,6 +148,11 @@ class BBInfiniteGame:
         self.hold_blocks[self.hold_blocks.index(hold_block)] = None
 
         return True
+    
+
+    def _add_life(self, life):
+
+        self.life = min(self.life + life, BBInfiniteGame.MAX_LIFE)
 
 
     def hold_block(self, wave_block, hold_index):
@@ -143,6 +177,7 @@ class BBInfiniteGame:
         
         score = new_board.clear()
         self.score += score
+        self._add_life(BBInfiniteGame.PLACE_REPLENISH if score == 0 else score * BBInfiniteGame.ROW_REPLENISH)
         self.board = new_board
 
         return True
@@ -150,7 +185,7 @@ class BBInfiniteGame:
     
     def place_wave_block(self, wave_block, anchor_position):
 
-        if wave_block is None or wave_block not in self.wave_blocks:
+        if not self.alive or wave_block is None or wave_block not in self.wave_blocks:
             return False
         
         result = self._place_block(wave_block, anchor_position)
@@ -164,7 +199,7 @@ class BBInfiniteGame:
 
     def place_hold_block(self, hold_block, anchor_position):
 
-        if hold_block is None or hold_block not in self.hold_blocks:
+        if not self.alive or hold_block is None or hold_block not in self.hold_blocks:
             return False
         
         result = self._place_block(hold_block, anchor_position)
@@ -174,3 +209,17 @@ class BBInfiniteGame:
             self._update_alive()
 
         return result
+    
+
+    def start(self):
+
+        self._generate_wave()
+        self.started = True
+        self.life = BBInfiniteGame.MAX_LIFE
+
+    
+    def update(self, dt):
+
+        self.life = max(0, self.life - dt)
+        if self.life == 0:
+            self.alive = False
