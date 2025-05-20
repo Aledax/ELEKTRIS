@@ -1,15 +1,14 @@
-from lib.scenes.elektrisscenerunner import *
+import pygame
+
 from lib.scenes.sceneconfig import *
 
 
 if __name__ == '__main__':
 
-    scene_runner = ElektrisSceneRunner(WINDOW_SIZE, True, False)
+    window_surface = pygame.display.set_mode(WINDOW_SIZE)
 
-    # Must be imported after PygameSceneRunner instantiation
+    from lib.scenes.elektrisscenerunner import *
 
-    from lib.scenes.mainscene import *
-    main_scene = MainScene(scene_runner)
-
-    scene_runner.switch_active_scene(main_scene, False)
+    scene_runner = ElektrisSceneRunner(window_surface, True, False)
+    scene_runner.switch_to_main_scene(False)
     scene_runner.loop()

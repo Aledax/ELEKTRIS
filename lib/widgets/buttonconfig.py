@@ -16,10 +16,16 @@ BUTTON_BORDER = int(WINDOW_WIDTH * BUTTON_BORDER_RATIO)
 # Colors
 
 
-BUTTON_COLOR_BACKGROUND_DEFAULT = (*COLOR_BASE, 50)
-BUTTON_COLOR_BACKGROUND_HIGHLIGHT = (*COLOR_BASE, 100)
-BUTTON_COLOR_BORDER_DEFAULT = (*COLOR_BASE, 225)
-BUTTON_COLOR_BORDER_HIGHLIGHT = (*COLOR_BASE, 255)
+def generate_color_index(color_base):
 
-BUTTON_COLOR_TEXT_DEFAULT = color_lighten(COLOR_BASE, 0.3)
-BUTTON_COLOR_TEXT_HIGHLIGHT = (255, 255, 225)
+    color_index = {}
+
+    color_index['background-default'] = (*color_base, 50)
+    color_index['background-highlight'] = (*color_base, 100)
+    color_index['border-default'] = (*color_base, 225)
+    color_index['border-highlight'] = (*color_base, 255)
+
+    color_index['text-default'] = color_lighten(color_base, 0.3)
+    color_index['text-highlight'] = (255, 255, 225)
+
+    return color_index

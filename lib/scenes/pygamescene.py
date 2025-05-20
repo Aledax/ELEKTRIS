@@ -13,11 +13,11 @@ pygame.mixer.init()
 class PygameSceneRunner:
 
     
-    def __init__(self, screen_size, debug=False, fps_cap=True):
+    def __init__(self, window_surface, debug=False, fps_cap=True):
 
         self.clock = pygame.time.Clock()
         self.fps = 60
-        self.window_surface = pygame.display.set_mode(screen_size)
+        self.window_surface = window_surface
         self.active_scene = None
         self.debug = debug
         self.fps_cap = fps_cap

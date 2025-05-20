@@ -20,4 +20,13 @@ BACKGROUND_SCROLL_SPEED = 20
 # Colors
 
 
-COLOR_BASE = (100, 200, 255)
+COLOR_BASES = [
+    (100, 200, 255),
+    (107, 255, 102),
+    (255, 102, 107),
+    (163, 102, 255),
+    (102, 255, 214),
+    (255, 102, 229)
+    
+]
+THEME_COUNT = len(COLOR_BASES)

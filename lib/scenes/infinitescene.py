@@ -20,7 +20,7 @@ from lib.utils.npplus import *
 class InfiniteScene(PygameScene):
 
 
-    def __init__(self, scene_runner):
+    def __init__(self, scene_runner, stage):
 
         super().__init__(scene_runner, WINDOW_SIZE)
 
@@ -41,6 +41,16 @@ class InfiniteScene(PygameScene):
         self.selected_block_position = (0, 0)
         self.released_block_width = BOARD_CELL_WIDTH
         self.released_block_position = (0, 0) # Not actually lineraly interpolated
+
+        # Game config
+
+        self.stage = stage
+        self.score_goal = stage * 10
+        self.max_life_multiplier = max(0.5, 0.9 ** (self.stage - 1))
+        self.replenish_multiplier = max(0.5, 0.9 ** (self.stage - 1))
+        
+        self.theme_id = (stage - 1) % THEME_COUNT
+        self.color_index = generate_color_index(COLOR_BASES[self.theme_id])
 
         self.setup()
 
@@ -85,9 +95,11 @@ class InfiniteScene(PygameScene):
             place_hold_result = self.game.place_hold_block(self.selected_block, anchor_position)
 
             if previous_score != self.game.score:
-                self.update_score_label()
+                self.update_score_label(self.game.score)
                 SOUND_SCORE.play()
                 self.flash_alpha = FLASH_INITIAL_ALPHA
+                if self.game.won:
+                    self.update_message_label('Good job! Press Space to continue')
 
             if place_wave_result or place_hold_result:
                 SOUND_PLACE.play()
@@ -107,6 +119,7 @@ class InfiniteScene(PygameScene):
             if not self.game.alive:
                 SOUND_LOSE.play()
                 pygame.mixer.music.stop()
+                self.update_message_label('No more moves! Press Space to return')
 
         self.selected_block = None
 
@@ -118,10 +131,9 @@ class InfiniteScene(PygameScene):
         # Game state
 
         self.game = BBInfiniteGame(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'blocks.json'),
-            ['buff_i', 'buff_l'])
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'blocks.json'), [], self.score_goal, self.max_life_multiplier, self.replenish_multiplier)
         self.game.start()
-        self.update_score_label()
+        self.update_message_label('')
 
         self.started = True
         self.selected_block = None
@@ -141,19 +153,26 @@ class InfiniteScene(PygameScene):
         self.released_block = None
 
         self.score_label = None
+        self.score_goal_label = None if self.score_goal == 0 else FONT_SCORE_GOAL.render(f'/ {self.score_goal}', True, self.color_index['text-score-goal'])
+        self.message_label = None
+        self.update_score_label(0)
+        self.update_message_label('Press Space to start')
+        self.score_goal_label.set_alpha(self.color_index['text-score-goal'][3])
 
         # Background, board, and wave row
+
+        self.image_bg = pygame.transform.smoothscale(IMAGE_BG(self.theme_id), (WINDOW_WIDTH, WINDOW_WIDTH))
         
         wave_row_surface = pygame.surface.Surface((WINDOW_WIDTH, WAVE_ROW_HEIGHT)).convert_alpha()
-        wave_row_surface.fill(COLOR_WAVE_ROW)
+        wave_row_surface.fill(self.color_index['wave-row'])
 
         self.midground_surface = pygame.surface.Surface(WINDOW_SIZE).convert_alpha()
         self.midground_surface.fill((0, 0, 0, 0))
         self.midground_surface.blit(wave_row_surface, (0, WAVE_Y - WAVE_ROW_HEIGHT / 2))
 
         cell_board_surface = pygame.surface.Surface((BOARD_CELL_WIDTH, BOARD_CELL_WIDTH)).convert_alpha()
-        cell_board_surface.fill(COLOR_CELL_BOARD_BORDER)
-        pygame.draw.rect(cell_board_surface, COLOR_CELL_BOARD, (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
+        cell_board_surface.fill(self.color_index['cell-board-border'])
+        pygame.draw.rect(cell_board_surface, self.color_index['cell-board'], (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
         cell_board_surface_mipmap = {BOARD_CELL_WIDTH: cell_board_surface}
         self.draw_cell_surfaces(
             self.midground_surface,
@@ -166,20 +185,20 @@ class InfiniteScene(PygameScene):
         )
         
         for center in HOLD_POSITIONS:
-            draw_regular_polygon(self.midground_surface, center, HOLD_MARK_RADIUS, 4, 0, COLOR_HOLD_MARK)
+            draw_regular_polygon(self.midground_surface, center, HOLD_MARK_RADIUS, 4, 0, self.color_index['hold-mark'])
         
         # Block previews
 
         cell_preview_base_surface = pygame.surface.Surface((BOARD_CELL_WIDTH, BOARD_CELL_WIDTH)).convert_alpha()
-        cell_preview_base_surface.fill(COLOR_CELL_PREVIEW_BORDER)
-        pygame.draw.rect(cell_preview_base_surface, COLOR_CELL_PREVIEW, (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
+        cell_preview_base_surface.fill(self.color_index['cell-preview-border'])
+        pygame.draw.rect(cell_preview_base_surface, self.color_index['cell-preview'], (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
         self.cell_preview_surface_mipmap = {BOARD_CELL_WIDTH: cell_preview_base_surface}
         for i in range(BOARD_CELL_WIDTH):
             self.cell_preview_surface_mipmap[i] = pygame.transform.smoothscale(cell_preview_base_surface, (i, i))
 
         cell_preview_highlight_base_surface = pygame.surface.Surface((BOARD_CELL_WIDTH, BOARD_CELL_WIDTH)).convert_alpha()
-        cell_preview_highlight_base_surface.fill(COLOR_CELL_PREVIEW_HIGHLIGHT_BORDER)
-        pygame.draw.rect(cell_preview_highlight_base_surface, COLOR_CELL_PREVIEW_HIGHLIGHT, (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
+        cell_preview_highlight_base_surface.fill(self.color_index['cell-preview-highlight-border'])
+        pygame.draw.rect(cell_preview_highlight_base_surface, self.color_index['cell-preview-highlight'], (BOARD_CELL_BORDER, BOARD_CELL_BORDER, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2, BOARD_CELL_WIDTH - BOARD_CELL_BORDER * 2))
         self.cell_preview_highlight_surface_mipmap = {BOARD_CELL_WIDTH: cell_preview_highlight_base_surface}
         for i in range(BOARD_CELL_WIDTH):
             self.cell_preview_highlight_surface_mipmap[i] = pygame.transform.smoothscale(cell_preview_highlight_base_surface, (i, i))
@@ -191,29 +210,30 @@ class InfiniteScene(PygameScene):
             board_filled_surface = pygame.surface.Surface((i, i)).convert_alpha()
             board_filled_inner_border = int(round(i * (1 - BOARD_CELL_INNER_FILL_WIDTH_RATIO) / 2))
             board_filled_inner_width = i - 2 * board_filled_inner_border
-            board_filled_surface.fill(COLOR_CELL_BOARD_FILLED)
-            pygame.draw.rect(board_filled_surface, COLOR_CELL_BOARD_INNER_FILLED, (board_filled_inner_border, board_filled_inner_border, board_filled_inner_width, board_filled_inner_width))
+            board_filled_surface.fill(self.color_index['cell-board-filled'])
+            pygame.draw.rect(board_filled_surface, self.color_index['cell-board-inner-filled'], (board_filled_inner_border, board_filled_inner_border, board_filled_inner_width, board_filled_inner_width))
             self.board_filled_surface_mipmap[i] = board_filled_surface
 
         # Board marker
 
         board_marker_surface = pygame.surface.Surface((BOARD_CELL_WIDTH, BOARD_CELL_WIDTH)).convert_alpha()
-        pygame.draw.rect(board_marker_surface, COLOR_CELL_BOARD_HIGHLIGHT, ((BOARD_CELL_WIDTH - BOARD_MARKER_CELL_WIDTH) / 2, (BOARD_CELL_WIDTH - BOARD_MARKER_CELL_WIDTH) / 2, BOARD_MARKER_CELL_WIDTH, BOARD_MARKER_CELL_WIDTH))
+        pygame.draw.rect(board_marker_surface, self.color_index['cell-board-highlight'], ((BOARD_CELL_WIDTH - BOARD_MARKER_CELL_WIDTH) / 2, (BOARD_CELL_WIDTH - BOARD_MARKER_CELL_WIDTH) / 2, BOARD_MARKER_CELL_WIDTH, BOARD_MARKER_CELL_WIDTH))
         self.board_marker_surface_mipmap = {BOARD_CELL_WIDTH: board_marker_surface}
 
         # Flash
 
         self.flash_surface = pygame.surface.Surface(WINDOW_SIZE).convert_alpha()
-        self.flash_surface.fill(COLOR_FLASH)
+        self.flash_surface.fill(self.color_index['flash'])
 
 
     def _update_frame(self, dt, mouse_position, mouse_pressed, keys_pressed, events):
 
-        if self.started and self.game.alive:
+        if self.started and self.game.alive and not self.game.won:
             self.game.update(dt)
             if self.game.alive == False:
                 SOUND_LOSE.play()
                 pygame.mixer.music.stop()
+                self.update_message_label('Ran out of time! Press Space to return')
 
         # MECHANICS
 
@@ -243,20 +263,23 @@ class InfiniteScene(PygameScene):
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         self.release_block(mouse_position, selected_board_position)
-                elif event.type == KEYDOWN:
-                    if event.key == K_r and pressing_ctrl:
-                        SOUND_RESTART.play()
-                        self.setup()
+                elif event.type == KEYDOWN and event.key == K_SPACE:
+                    if self.game.won:
+                        self.scene_runner.switch_to_infinite_scene(True, self.stage + 1)
+                    elif not self.game.alive:
+                        self.scene_runner.switch_to_main_scene(True)
             else:
                 if event.type == KEYDOWN and event.key == K_SPACE:
-                    self.start_game()
+                    if not self.started:
+                        self.start_game()
+                    
             
         # ANIMATION
 
         self.flash_alpha = lerp_float(self.flash_alpha, 0, FLASH_ALPHA_LERP, dt * self.scene_runner.fps)
         self.flash_surface.set_alpha(self.flash_alpha)
 
-        self.background_scroll = (self.background_scroll - BACKGROUND_SCROLL_SPEED * dt) % IMAGE_BG.get_height()
+        self.background_scroll = (self.background_scroll - BACKGROUND_SCROLL_SPEED * dt) % self.image_bg.get_height()
 
         if self.started:
             filled_positions = self.game.board.filled_positions()
@@ -284,10 +307,17 @@ class InfiniteScene(PygameScene):
 
         # Background and midground
 
-        for i in range(-1, int(WINDOW_HEIGHT / IMAGE_BG.get_height()) + 1):
-            self.scene_surface.blit(IMAGE_BG, (0, self.background_scroll + i * IMAGE_BG.get_height()))
+        for i in range(-1, int(WINDOW_HEIGHT / self.image_bg.get_height()) + 1):
+            self.scene_surface.blit(self.image_bg, (0, self.background_scroll + i * self.image_bg.get_height()))
 
-        self.scene_surface.blit(self.midground_surface, (0, 0))            
+        self.scene_surface.blit(self.midground_surface, (0, 0))          
+
+        # Labels
+
+        blit_plus(self.score_label, self.scene_surface, (2, 0, 2, 2), (0.5, SCORE_Y, 0.5, 0.5))
+        blit_plus(self.message_label, self.scene_surface, (2, 0, 2, 2), (0.5, MESSAGE_Y, 0.5, 0.5))
+        if self.score_goal != 0:
+            blit_plus(self.score_goal_label, self.scene_surface, (0, 0, 2, 2), (WINDOW_CENTER_X + self.score_label.get_width() / 2 + SCORE_GOAL_X, SCORE_GOAL_Y, 0.5, 0.5))
         
         if self.started:
 
@@ -307,10 +337,6 @@ class InfiniteScene(PygameScene):
             )
 
             self.scene_surface.blit(board_surface, (0, 0))
-
-            # Score label
-
-            blit_plus(self.score_label, self.scene_surface, (2, 0, 2, 2), (0.5, SCORE_Y, 0.5, 0.5))
                         
             # Wave Blocks
 
@@ -362,8 +388,9 @@ class InfiniteScene(PygameScene):
                 
             # Timer Ring
                 
-            self.draw_timer_ring(self.scene_surface, BOARD_CENTER, self.game.life, COLOR_TIMER)
-            self.draw_timer_ring(self.scene_surface, BOARD_CENTER, self.lerp_timer, COLOR_LERP_TIMER)
+            if not self.game.won:
+                self.draw_timer_ring(self.scene_surface, BOARD_CENTER, self.game.life, self.color_index['timer'])
+                self.draw_timer_ring(self.scene_surface, BOARD_CENTER, self.lerp_timer, self.color_index['lerp-timer'])
 
             # Selected Block
                 
@@ -429,8 +456,8 @@ class InfiniteScene(PygameScene):
         if not self.game.alive:
             return
 
-        timer_eighth_index = math.ceil(life / (BBInfiniteGame.MAX_LIFE / 8))
-        timer_eighth_remainder_portion = (life % (BBInfiniteGame.MAX_LIFE / 8)) / (BBInfiniteGame.MAX_LIFE / 8)
+        timer_eighth_index = math.ceil(life / (self.game.max_life / 8))
+        timer_eighth_remainder_portion = (life % (self.game.max_life / 8)) / (self.game.max_life / 8)
         eighth_length = round(TIMER_SIZE / 2)
         remainder_length = round(eighth_length * timer_eighth_remainder_portion)
         (l, t) = np.subtract(center, np.multiply([TIMER_SIZE, TIMER_SIZE], 0.5)).tolist()
@@ -466,6 +493,13 @@ class InfiniteScene(PygameScene):
             pygame.draw.rect(surface, color, (l + eighth_length - remainder_length, t, remainder_length, TIMER_RING_THICKNESS))
 
 
-    def update_score_label(self):
+    def update_score_label(self, score):
 
-        self.score_label = FONT_SCORE.render(str(self.game.score), True, COLOR_TEXT_SCORE)
+        self.score_label = FONT_SCORE.render(str(score), True, self.color_index['text-score'])
+        self.score_label.set_alpha(self.color_index['text-score'][3])
+
+    
+    def update_message_label(self, message):
+
+        self.message_label = FONT_MESSAGE.render(message, True, self.color_index['text-message'])
+        self.message_label.set_alpha(self.color_index['text-message'][3])

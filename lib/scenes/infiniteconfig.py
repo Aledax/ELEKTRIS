@@ -11,7 +11,11 @@ from lib.scenes.sceneconfig import *
 
 
 SCORE_Y_RATIO = 0.12 # As a portion of the window height
+SCORE_GOAL_X_RATIO = 0.08 # As a portion of the window width
+SCORE_GOAL_Y_RATIO = 0.14 # As a portion of the window height
 FONT_SCORE_SIZE_RATIO = 0.1 # As a portion of the window height
+FONT_SCORE_GOAL_SIZE_RATIO = 0.35 # As a portion of the score size
+FONT_MESSAGE_SIZE_RATIO = 0.02 # As a portion of the window height
 
 BOARD_CENTER_Y_RATIO = 0.42 # As a portion of the window height
 BOARD_CELL_WIDTH_RATIO = 0.085 # As a portion of the window width
@@ -21,6 +25,7 @@ BOARD_MARKER_CELL_WIDTH_RATIO = 1 # As a portion of the board cell width
 PREVIEW_CELL_WIDTH_RATIO = 0.05 # As a portion of the window width
 CELL_MARGIN_RATIO = 0.2 # As a portion of the cell width
 
+MESSAGE_Y_RATIO = 0.64 # As a portion of the window height
 WAVE_Y_RATIO = 0.75 # As a portion of the window height
 HOLD_Y_RATIO = 0.9 # As a portion of the window height
 PREVIEW_SPACING_RATIO = 0.275 # As a portion of the window width
@@ -43,6 +48,7 @@ BOARD_TOPLEFT = np.subtract(BOARD_CENTER, (BOARD_CELL_WIDTH * BBBoard.BOARD_SIZE
 
 PREVIEW_CELL_WIDTH = int(WINDOW_WIDTH * PREVIEW_CELL_WIDTH_RATIO)
 PREVIEW_CELL_MARGIN = int(PREVIEW_CELL_WIDTH * CELL_MARGIN_RATIO)
+MESSAGE_Y = int(WINDOW_HEIGHT * MESSAGE_Y_RATIO)
 WAVE_Y = int(WINDOW_HEIGHT * WAVE_Y_RATIO)
 HOLD_Y = int(WINDOW_HEIGHT * HOLD_Y_RATIO)
 PREVIEW_SPACING = int(WINDOW_WIDTH * PREVIEW_SPACING_RATIO)
@@ -57,7 +63,11 @@ TIMER_RING_MARGIN = int(BOARD_CELL_WIDTH * TIMER_RING_MARGIN_RATIO)
 TIMER_SIZE = BBBoard.BOARD_SIZE * BOARD_CELL_WIDTH + (BBBoard.BOARD_SIZE - 1) * BOARD_CELL_MARGIN + 2 * (TIMER_RING_MARGIN + TIMER_RING_THICKNESS)
 
 SCORE_Y = int(WINDOW_HEIGHT * SCORE_Y_RATIO)
+SCORE_GOAL_X = int(WINDOW_WIDTH * SCORE_GOAL_X_RATIO)
+SCORE_GOAL_Y = int(WINDOW_HEIGHT * SCORE_GOAL_Y_RATIO)
 FONT_SCORE_SIZE = int(WINDOW_HEIGHT * FONT_SCORE_SIZE_RATIO)
+FONT_SCORE_GOAL_SIZE = int(FONT_SCORE_SIZE * FONT_SCORE_GOAL_SIZE_RATIO)
+FONT_MESSAGE_SIZE = int(WINDOW_HEIGHT * FONT_MESSAGE_SIZE_RATIO)
 
 
 # Animations
@@ -73,22 +83,32 @@ TIMER_LERP = 0.1
 # Colors
 
 
-COLOR_BG_FLASH = color_lighten(COLOR_BASE, 0.5)
-COLOR_FLASH = (255, 255, 255)
 FLASH_INITIAL_ALPHA = 35
 
-COLOR_CELL_BOARD = (*COLOR_BASE, 15)
-COLOR_CELL_BOARD_BORDER = (*COLOR_BASE, 75)
-COLOR_CELL_BOARD_HIGHLIGHT = (*color_lighten(COLOR_BASE, 0.2), 100)
-COLOR_CELL_BOARD_FILLED = (*color_lighten(COLOR_BASE, 0.2), 200)
-COLOR_CELL_BOARD_INNER_FILLED = (*color_lighten(COLOR_BASE, 0.75), 225)
-COLOR_CELL_PREVIEW = (0, 5, 5, 240)
-COLOR_CELL_PREVIEW_BORDER = (100, 200, 255)
-COLOR_CELL_PREVIEW_HIGHLIGHT = color_lighten(COLOR_CELL_PREVIEW, 0.05)
-COLOR_CELL_PREVIEW_HIGHLIGHT_BORDER = color_lighten(COLOR_CELL_PREVIEW_BORDER, 0.7)
 
-COLOR_WAVE_ROW = (*COLOR_BASE, 15)
-COLOR_TEXT_SCORE = COLOR_CELL_BOARD_FILLED
-COLOR_TIMER = (*color_lighten(COLOR_BASE, 0.2), 100)
-COLOR_LERP_TIMER = (*color_lighten(COLOR_BASE, 0.2), 225)
-COLOR_HOLD_MARK = (*COLOR_BASE, 200)
+def generate_color_index(color_base):
+
+    color_index = {}
+
+    color_index['bg-flash'] = color_lighten(color_base, 0.5)
+    color_index['flash'] = (255, 255, 255)
+
+    color_index['cell-board'] = (*color_base, 15)
+    color_index['cell-board-border'] = (*color_base, 75)
+    color_index['cell-board-highlight'] = (*color_lighten(color_base, 0.2), 100)
+    color_index['cell-board-filled'] = (*color_lighten(color_base, 0.2), 200)
+    color_index['cell-board-inner-filled'] = (*color_lighten(color_base, 0.75), 225)
+    color_index['cell-preview'] = (*color_multiply(color_base, 0.1), 240)
+    color_index['cell-preview-border'] = color_lighten(color_base, 0.5)
+    color_index['cell-preview-highlight'] = color_lighten(color_index['cell-preview'], 0.05)
+    color_index['cell-preview-highlight-border'] = color_lighten(color_index['cell-preview-border'], 0.7)
+
+    color_index['wave-row'] = (*color_base, 15)
+    color_index['text-score'] = (*color_index['cell-board-filled'][:3], 255)
+    color_index['text-score-goal'] = (*color_index['text-score'][:3], 200)
+    color_index['text-message'] = color_index['text-score']
+    color_index['timer'] = (*color_lighten(color_base, 0.2), 100)
+    color_index['lerp-timer'] = (*color_lighten(color_base, 0.2), 225)
+    color_index['hold-mark'] = (*color_lighten(color_base, 0.2), 200)
+
+    return color_index

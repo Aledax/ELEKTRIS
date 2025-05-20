@@ -11,9 +11,9 @@ class BBInfiniteGame:
     WAVE_SIZE = 3
     HOLD_SIZE = 1
 
-    MAX_LIFE = 20
-    PLACE_REPLENISH = 1
-    ROW_REPLENISH = 5
+    MAX_LIFE = 25
+    PLACE_REPLENISH = 1.25
+    ROW_REPLENISH = 6.25
 
     ABILITY_TAGS = [
         'buff_i',
@@ -54,7 +54,7 @@ class BBInfiniteGame:
             return '\n'.join(' '.join(row) for row in rows)
 
     
-    def __init__(self, block_json_path, active_abilities):
+    def __init__(self, block_json_path, active_abilities, score_goal=0, max_life_multiplier=1, replenish_multiplier=1):
 
         self.board = BBBoard()
         self.started = False
@@ -63,8 +63,13 @@ class BBInfiniteGame:
         self.wave_blocks = [None for _ in range(BBInfiniteGame.WAVE_SIZE)]
         self.hold_blocks = [None for _ in range(BBInfiniteGame.HOLD_SIZE)]
         self.score = 0
+        self.won = False
         self.life = 0
         self.abilities = {ability: ability in active_abilities for ability in BBInfiniteGame.ABILITY_TAGS}
+        self.score_goal = score_goal
+        self.max_life = BBInfiniteGame.MAX_LIFE * max_life_multiplier
+        self.place_replenish = BBInfiniteGame.PLACE_REPLENISH * replenish_multiplier
+        self.row_replenish = BBInfiniteGame.ROW_REPLENISH * replenish_multiplier
 
         self._load_blocks(block_json_path)
 
@@ -152,7 +157,7 @@ class BBInfiniteGame:
 
     def _add_life(self, life):
 
-        self.life = min(self.life + life, BBInfiniteGame.MAX_LIFE)
+        self.life = min(self.life + life, self.max_life)
 
 
     def hold_block(self, wave_block, hold_index):
@@ -177,7 +182,10 @@ class BBInfiniteGame:
         
         score = new_board.clear()
         self.score += score
-        self._add_life(BBInfiniteGame.PLACE_REPLENISH if score == 0 else score * BBInfiniteGame.ROW_REPLENISH)
+        if self.score_goal != 0 and self.score >= self.score_goal:
+            self.score = self.score_goal
+            self.won = True
+        self._add_life(self.place_replenish if score == 0 else score * self.row_replenish)
         self.board = new_board
 
         return True
@@ -215,7 +223,7 @@ class BBInfiniteGame:
 
         self._generate_wave()
         self.started = True
-        self.life = BBInfiniteGame.MAX_LIFE
+        self.life = self.max_life
 
     
     def update(self, dt):

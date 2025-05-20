@@ -1,11 +1,9 @@
-import pygame
 from pygame.locals import *
 
 from lib.scenes.pygamescene import PygameScene
 from lib.scenes.sceneconfig import *
 from lib.scenes.mainconfig import *
 from lib.scenes.mainassets import *
-from lib.scenes.infinitescene import InfiniteScene
 
 from lib.widgets.buttonwidget import ButtonWidget
 
@@ -17,7 +15,7 @@ class MainScene(PygameScene):
 
         super().__init__(scene_runner, WINDOW_SIZE)
 
-        self.infinite_button = ButtonWidget(WINDOW_CENTER, True, 0.5, 0.07, 'Start!', [self._start_infinite], [[]])
+        self.infinite_button = ButtonWidget(0, WINDOW_CENTER, True, 0.5, 0.07, 'Start!', [self._start_infinite], [[]])
 
         # Animation state
 
@@ -26,7 +24,7 @@ class MainScene(PygameScene):
 
     def _start_infinite(self):
 
-        self.scene_runner.switch_active_scene(InfiniteScene(self.scene_runner), True)
+        self.scene_runner.switch_to_infinite_scene(True, 1)
 
     
     def _update_frame(self, dt, mouse_position, mouse_pressed, keys_pressed, events):

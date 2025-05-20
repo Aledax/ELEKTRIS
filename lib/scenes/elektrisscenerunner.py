@@ -1,6 +1,8 @@
 from lib.scenes.pygamescene import *
 from lib.scenes.elektrisconfig import *
 from lib.scenes.elektrisassets import *
+from lib.scenes.mainscene import MainScene
+from lib.scenes.infinitescene import InfiniteScene
 
 
 class ElektrisSceneRunner(PygameSceneRunner):
@@ -11,9 +13,9 @@ class ElektrisSceneRunner(PygameSceneRunner):
     TRANSITION_BACKWARDS = 2
 
 
-    def __init__(self, screen_size, debug=False, fps_cap=True):
+    def __init__(self, window_surface, debug=False, fps_cap=True):
 
-        super().__init__(screen_size, debug, fps_cap)
+        super().__init__(window_surface, debug, fps_cap)
 
         self.transition_state = ElektrisSceneRunner.TRANSITION_NONE
         self.transition_stopwatch = 0
@@ -28,6 +30,16 @@ class ElektrisSceneRunner(PygameSceneRunner):
             SOUND_TRANSITION.play()
         else:
             self.active_scene = active_scene
+
+
+    def switch_to_main_scene(self, transition):
+
+        self.switch_active_scene(MainScene(self), transition)
+
+
+    def switch_to_infinite_scene(self, transition, stage):
+
+        self.switch_active_scene(InfiniteScene(self, stage), transition)
 
 
     def _update_frame(self, dt, mouse_position, mouse_pressed, keys_pressed, events):
@@ -56,7 +68,7 @@ class ElektrisSceneRunner(PygameSceneRunner):
         transition_width = TRANSITION_PROGRESS_FUNCTION(self.transition_stopwatch) * WINDOW_WIDTH
         if self.transition_state == ElektrisSceneRunner.TRANSITION_BACKWARDS:
             transition_width = WINDOW_WIDTH - transition_width
-        transition_width /= 2
+        transition_width = round(transition_width / 2)
         
         pygame.draw.rect(self.active_scene.scene_surface, TRANSITION_COLOR, (0, 0, transition_width, WINDOW_HEIGHT))
         pygame.draw.rect(self.active_scene.scene_surface, TRANSITION_COLOR, (WINDOW_WIDTH - transition_width, 0, transition_width, WINDOW_HEIGHT))

@@ -7,14 +7,16 @@ from lib.scenes.infiniteconfig import *
 # Images
 
 
-IMAGE_BG = pygame.transform.scale_by(
-    pygame.image.load(asset_path(os.path.join('images', 'space-bg-3.png'))), 0.25).convert_alpha()
+IMAGE_BG = lambda theme_id: pygame.transform.scale_by(
+    pygame.image.load(asset_path(os.path.join('images', f'spacebg{theme_id}.png'))), 0.25).convert_alpha()
 
 
 # Fonts
 
 
 FONT_SCORE = pygame.font.Font(asset_path(os.path.join('fonts', 'DAGGERSQUARE.otf')), FONT_SCORE_SIZE)
+FONT_SCORE_GOAL = pygame.font.Font(asset_path(os.path.join('fonts', 'DAGGERSQUARE.otf')), FONT_SCORE_GOAL_SIZE)
+FONT_MESSAGE = pygame.font.Font(asset_path(os.path.join('fonts', 'DAGGERSQUARE.otf')), FONT_MESSAGE_SIZE)
 
 
 # Sounds

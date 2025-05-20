@@ -14,9 +14,12 @@ class ButtonWidget:
     STATE_HOLDING = 2
 
     
-    def __init__(self, position, centered, width_ratio, height_ratio, text, callbacks, args):
+    def __init__(self, theme_id, position, centered, width_ratio, height_ratio, text, callbacks, args):
 
         
+        self.theme_id = theme_id
+        self.color_index = generate_color_index(COLOR_BASES[self.theme_id])
+
         self.width = WINDOW_WIDTH * width_ratio
         self.height = WINDOW_HEIGHT * height_ratio
         self.topleft = position if not centered else np.subtract(position, np.multiply(self.size, 0.5)).tolist()
@@ -28,13 +31,13 @@ class ButtonWidget:
         text_highlight_size = text_default_size * BUTTON_TEXT_HIGHLIGHT_RATIO
         default_font = pygame.font.Font(BUTTON_FONT_PATH, int(round(text_default_size)))
         highlight_font = pygame.font.Font(BUTTON_FONT_PATH, int(round(text_highlight_size)))
-        text_default_surface = default_font.render(text, True, BUTTON_COLOR_TEXT_DEFAULT)
-        text_highlight_surface = highlight_font.render(text, True, BUTTON_COLOR_TEXT_HIGHLIGHT)
+        text_default_surface = default_font.render(text, True, self.color_index['text-default'])
+        text_highlight_surface = highlight_font.render(text, True, self.color_index['text-highlight'])
         
         self.default_surface = pygame.surface.Surface(self.size).convert_alpha()
         self.highlight_surface = pygame.surface.Surface(self.size).convert_alpha()
-        self._prepare_surface(self.default_surface, BUTTON_COLOR_BACKGROUND_DEFAULT, BUTTON_COLOR_BORDER_DEFAULT, text_default_surface)
-        self._prepare_surface(self.highlight_surface, BUTTON_COLOR_BACKGROUND_HIGHLIGHT, BUTTON_COLOR_BORDER_HIGHLIGHT, text_highlight_surface)
+        self._prepare_surface(self.default_surface, self.color_index['background-default'], self.color_index['border-default'], text_default_surface)
+        self._prepare_surface(self.highlight_surface, self.color_index['background-highlight'], self.color_index['border-highlight'], text_highlight_surface)
 
         self.callbacks = callbacks
         self.args = args
